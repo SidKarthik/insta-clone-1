@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, prevState } from 'react';
 import './Post.css'
 import Avatar from "@material-ui/core/Avatar"
 import { db } from './firebase';
 import { Button, Input } from '@material-ui/core'
 import firebase from 'firebase';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import FavoriteIcon from '@material-ui/icons/Favorite';
 
 function Post({ postID, user, username, caption, imageURL }) {
 
     const [comments, setComments] = useState([]);
     const [comment, setComment] = useState('');
-    const [liked, setLiked] = useState([])
-    const [like, setLike] = useState('')
+    // const [isliked, setisLiked] = useState(false)
+    const [like, setLike] = useState(false);
+    let num = 0;
+    const [likecount, setLikecount] = useState('0')
+
 
     useEffect(() => {
         let unsubscribe;
@@ -43,12 +47,23 @@ function Post({ postID, user, username, caption, imageURL }) {
         setComment('');
     }
 
-    const handleLikes = (event) => {
+    const Like = (event) => {
+            event.preventDefault();
+            console.log("liked");
+            setLikecount(prevState => prevState + 1);
+            console.log(likecount);
+            db.collection('posts').doc(postID).collection('LikedUsers').add({
+                username: user.displayName, 
+            });
+        setLike(!like);
+    }
+    
+    const Dislike = (event) => {
         event.preventDefault();
-
-        db.collection('posts').doc(postID).collection('LikedUsers').add({
-            user
-        })
+        console.log("liked");
+        setLikecount( likecount - 1);
+        db.collection('posts').doc(postID).collection('LikedUsers').doc().delete();
+        setLike(!like);
     }
 
     return (
@@ -72,7 +87,15 @@ function Post({ postID, user, username, caption, imageURL }) {
 
             {/* Like button */}
             <div className="post__like">
-                <FavoriteBorderIcon onClick={handleLikes}/>
+                {
+                    like==false? 
+                    (
+                        <FavoriteBorderIcon onClick={Like} />
+                    ) : 
+                    (
+                        <FavoriteIcon onClick={Dislike} color="secondary"/>
+                    )
+                }
             </div>
 
             {/* username + caption */}
